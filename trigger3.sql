@@ -1,0 +1,19 @@
+CREATE OR REPLACE TRIGGER HE.TRG_RECEIPT_ITEM_STOCK_DEL
+BEFORE DELETE
+ON HE.RECEIPT_ITEMS
+FOR EACH ROW
+BEGIN
+    UPDATE HE.PARTS
+       SET QUANTITY_ON_HAND =
+           QUANTITY_ON_HAND - :OLD.QUANTITY
+     WHERE PART_ID = :OLD.PART_ID
+       AND QUANTITY_ON_HAND >= :OLD.QUANTITY;
+
+    IF SQL%ROWCOUNT = 0 THEN
+        RAISE_APPLICATION_ERROR(
+            -20314,
+            'Delete rejected: insufficient stock or part not found.'
+        );
+    END IF;
+END;
+/
